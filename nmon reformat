@@ -1,0 +1,115 @@
+#!/bin/ksh
+
+
+##***********************************************************##
+## This script will gather the following informtion from
+##   the nmon command.
+##
+##***********************************************************##
+
+#set -o xtrace
+
+Server=$1
+Date=$2
+Dir=/loadsave/depot/
+
+
+#grep "^CPU_ALL" $File > temp_nmon_cpuall
+#grep "^LPAR" $File > temp_nmon_lpar
+#grep "ZZZZ" $File > temp_nmon_zzzz
+
+
+File_CPU=${Server}_CPU_${Date}.csv
+CPU_Header=$(echo $Server",Time,Date,Period,User%,Sys%,Wait%,Idle%,Busy,PhysicalCPUs" )
+echo $CPU_Header > $File_CPU
+
+File_MEM=${Server}_MEM_${Date}.csv
+MEM_Header=$(echo $Server",Time,Date,Period,Real Free %,Virtual free %,Real free(MB),Virtual free(MB),Real total(MB),Virtual total(MB)")
+echo $MEM_Header > $File_MEM
+
+
+File_LPAR=${Server}_LPAR_${Date}.csv
+LPAR_Header=$(echo $Server",Time,Date,Period,PhysicalCPU,virtualCPUs,logicalCPUs,poolCPUs,entitled,weight,PoolIdle,usedAllCPU%,usedPoolCPU%,SharedCPU,Capped,EC_User%,EC_Sys%,EC_Wait%,EC_Idle%,VP_User%,VP_Sys%,VP_Wait%,VP_Idle%,Folded,Pool_id")
+echo $LPAR_Header > $File_LPAR
+
+File_PROC=${Server}_PROC_${Date}.csv
+PROC_Header=$(echo $Server",Time,Date,Period,Runnable,Swap-in,pswitch,syscall,read,write,fork,exec,sem,msg,asleep_bufio,asleep_rawio,asleep_diocio")
+echo $PROC_Header > $File_PROC
+
+Header_Source=$(ls /loadsave/depot/${Server}_${Date}*.nmon  | head -n1)
+
+
+File_VGBUSY=${Server}_VGBUSY_${Date}.csv
+VGBUSY_Header=$(echo $Server",Time,Date,Period,"` grep "^VGBUSY,Disk Busy" $Header_Source |  cut -d, -f3-` | head -n1)
+echo $VGBUSY_Header > $File_VGBUSY
+
+File_VGREAD=${Server}_VGREAD_${Date}.csv
+VGREAD_Header=$(echo $Server",Time,Date,Period,"` grep "^VGREAD,Disk Read"  $Header_Source |  cut -d, -f3-`)
+echo $VGREAD_Header > $File_VGREAD
+
+File_VGWRITE=${Server}_VGWRITE_${Date}.csv
+VGWRITE_Header=$(echo $Server",Time,Date,Period,"` grep "^VGWRITE,Disk Write" $Header_Source |  cut -d, -f3-`)
+echo $VGWRITE_Header > $File_VGWRITE
+
+
+#$Server=$(grep "AAA,host," ${File} | sed 's/AAA,host,//')
+#echo $CPU_Header","$LPAR_Header > $File
+
+for j in $(ls ${Dir}${Server}_${Date}*.nmon )
+do
+    echo "File" $j
+    grep "^CPU_ALL" $j > ./temp_nmon_cpuall
+    grep "^MEM," $j > ./temp_nmon_mem
+    grep "^LPAR," $j > ./temp_nmon_lpar
+    grep "^PROC," $j > ./temp_nmon_proc
+    grep "^VGBUSY," $j > ./temp_nmon_vgbusy
+    grep "^VGWRITE," $j > ./temp_nmon_vgwrite
+    grep "^VGREAD," $j > ./temp_nmon_vgread
+    grep "ZZZZ" $j > temp_nmon_zzzz
+
+    for i in $(cat temp_nmon_zzzz)
+    do
+       Period=$(echo $i | awk -F, '{print $2}')
+       TimeDate=$(echo $i| awk -F, '{print $3","$4}')
+       #CPU_ALL=$(grep $Period ./temp_nmon_cpuall |sed  "s/CPU_ALL,$Period,//")
+#       MEM=$(grep $Period ./temp_nmon_mem |sed  "s/MEM,$Period,//")
+#       LPAR=$(grep $Period ./temp_nmon_lpar | sed "s/LPAR,${Period},//")
+#       PROC=$(grep $Period ./temp_nmon_proc | sed "s/PROC,${Period},//")
+#       VGBUSY=$(grep $Period ./temp_nmon_vgbusy | sed "s/VGBUSY,${Period},//")
+#       VGWRITE=$(grep $Period ./temp_nmon_vgwrite | sed "s/VGWRITE,${Period},//")
+#       VGREAD=$(grep $Period ./temp_nmon_vgread | sed "s/VGREAD,${Period},//")
+
+       CPU_ALL=$(grep $Period ./temp_nmon_cpuall |sed  "s/CPU_ALL,//")
+       MEM=$(grep $Period ./temp_nmon_mem |sed  "s/MEM,//")
+       LPAR=$(grep $Period ./temp_nmon_lpar | sed "s/LPAR,//")
+       PROC=$(grep $Period ./temp_nmon_proc | sed "s/PROC,//")
+       VGBUSY=$(grep $Period ./temp_nmon_vgbusy | sed "s/VGBUSY,//")
+       VGWRITE=$(grep $Period ./temp_nmon_vgwrite | sed "s/VGWRITE,//")
+       VGREAD=$(grep $Period ./temp_nmon_vgread | sed "s/VGREAD,//")
+
+       echo $Server","$TimeDate","$CPU_ALL >> $File_CPU
+       echo $Server","$TimeDate","$MEM >> $File_MEM
+       echo $Server","$TimeDate","$LPAR >> $File_LPAR
+       echo $Server","$TimeDate","$PROC >> $File_PROC
+       echo $Server","$TimeDate","$VGBUSY >> $File_VGBUSY
+       echo $Server","$TimeDate","$VGWRITE >> $File_VGWRITE
+       echo $Server","$TimeDate","$VGREAD >> $File_VGREAD
+    done
+done
+
+echo $File_CPU
+echo $File_MEM
+echo $File_LPAR
+echo $File_PROC
+echo $File_VGBUSY
+echo $File_VGREAD
+echo $File_VGWRITE
+chmod 755 $File_CPU
+chmod 755 $File_LPAR
+chmod 755 $File_PROC
+chmod 755 $File_VGBUSY
+chmod 755 $File_VGREAD
+chmod 755 $File_VGWRITE
+
+rm ./temp_nmon*
+echo "Finilized....."
