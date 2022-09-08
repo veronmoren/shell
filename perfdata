@@ -18,13 +18,13 @@ PAGEOUT_file=PAGEOUT.csv
 UMEM_file=UMEM.csv
 KMEM_file=KMEM.csv
 
-
+## File_input.txt has the content file and the time file
 #### Server name and Date #####
 #File=perfdata.txt
 File=$(awk -F: '{print $1}' File_input.txt) perl -pi -e 's/,/_/g' $File Server_Date=$(awk ' BEGIN {RS = ""} {FS ="\n"} (NF==1) {print $0}' $File | awk '{print $2","$6}') Server=$(echo $Server_Date  | awk -F, '{print $1}') #Date=$(echo $Server_Date  | awk -F, '{print $2}')
 
 #### Crate Time Table ####
-rm timetable.txt Devtimetable.txt > /dev/null 2>/dev/null #File_Time_Table=perfdata-slate-prd-73-02-misc-2022-06-28-0952.txt
+rm timetable.txt Devtimetable.txt > /dev/null 2>/dev/null 
 File_Time_Table=$(awk -F: '{print $2}' File_input.txt) grep TS  $File_Time_Table |sed 's/##//g;s/TS=//;s/ //g' | awk -F: '{print $1":"$2":"$3","$4":"$5":"$6","}'  | uniq > timetable.txt
 
 while read -r line
