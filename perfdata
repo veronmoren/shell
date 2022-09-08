@@ -1,0 +1,152 @@
+#!/bin/ksh
+
+
+#set -o xtrace 
+
+CPU_file=CPU.csv
+DEV_file=DEV.csv
+QUEUE_file=QUEUE.csv
+BUFFER_file=BUFFER.csv
+SWAP_file=SWAP.csv
+CALLS_file=CALLS.csv
+FLACC_file=FLACC.csv
+TERMAC_file=TERMAC.csv
+SYTABLE_file=SYTABLE.csv
+INTCOMM_file=INTCOMM.csv
+PAGEIN_file=PAGEIN.csv
+PAGEOUT_file=PAGEOUT.csv
+UMEM_file=UMEM.csv
+KMEM_file=KMEM.csv
+
+
+#### Server name and Date #####
+#File=perfdata.txt
+File=$(awk -F: '{print $1}' File_input.txt) perl -pi -e 's/,/_/g' $File Server_Date=$(awk ' BEGIN {RS = ""} {FS ="\n"} (NF==1) {print $0}' $File | awk '{print $2","$6}') Server=$(echo $Server_Date  | awk -F, '{print $1}') #Date=$(echo $Server_Date  | awk -F, '{print $2}')
+
+#### Crate Time Table ####
+rm timetable.txt Devtimetable.txt > /dev/null 2>/dev/null #File_Time_Table=perfdata-slate-prd-73-02-misc-2022-06-28-0952.txt
+File_Time_Table=$(awk -F: '{print $2}' File_input.txt) grep TS  $File_Time_Table |sed 's/##//g;s/TS=//;s/ //g' | awk -F: '{print $1":"$2":"$3","$4":"$5":"$6","}'  | uniq > timetable.txt
+
+while read -r line
+do
+    ((CONT = 1))
+    while [ $CONT -ne 42 ]
+      do
+       echo $line >> Devtimetable.txt
+        ((CONT = $CONT +1))
+    done
+done < timetable.txt
+
+
+echo "Start sed"
+sed '1 i\
+Date,Time,' timetable.txt > temp; mv temp timetable.txt sed '1 i\ Date,Time,' Devtimetable.txt > temp; mv temp Devtimetable.txt
+
+
+
+#### CPU Information ####
+awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $1}' $File | awk '{print "Server,Date,Time,"$2","$3","$4","$5}' > $CPU_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","$1}' $File  >> $CPU_file
+
+#### DEV Information ####
+awk -v Ser=$Server ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print Ser",Date,Time"$2}' $File > $DEV_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print \ Ser_Dat","substr($1,0,8),$2"\n" \ Ser_Dat","substr($1,0,8),$3"\n" \ Ser_Dat","substr($1,0,8),$4"\n" \ Ser_Dat","substr($1,0,8),$5"\n" \ Ser_Dat","substr($1,0,8),$6"\n" \ Ser_Dat","substr($1,0,8),$7"\n" \ Ser_Dat","substr($1,0,8),$8"\n" \ Ser_Dat","substr($1,0,8),$9"\n"\ Ser_Dat","substr($1,0,8),$10"\n" \ Ser_Dat","substr($1,0,8),$11"\n" \ Ser_Dat","substr($1,0,8),$12"\n" \ Ser_Dat","substr($1,0,8),$13"\n" \ Ser_Dat","substr($1,0,8),$14"\n" \ Ser_Dat","substr($1,0,8),$15"\n" \ Ser_Dat","substr($1,0,8),$16"\n" \ Ser_Dat","substr($1,0,8),$17"\n" \ Ser_Dat","substr($1,0,8),$18"\n" \ Ser_Dat","substr($1,0,8),$19"\n" \ Ser_Dat","substr($1,0,8),$20"\n" \ Ser_Dat","substr($1,0,8),$21"\n" \ Ser_Dat","substr($1,0,8),$22"\n" \ Ser_Dat","substr($1,0,8),$23"\n" \ Ser_Dat","substr($1,0,8),$24"\n" \ Ser_Dat","substr($1,0,8),$25"\n" \ Ser_Dat","substr($1,0,8),$26"\n" \ Ser_Dat","substr($1,0,8),$27"\n" \ Ser_Dat","substr($1,0,8),$28"\n" \ Ser_Dat","substr($1,0,8),$29"\n" \ Ser_Dat","substr($1,0,8),$30"\n" \ Ser_Dat","substr($1,0,8),$31"\n" \ Ser_Dat","substr($1,0,8),$32"\n" \ Ser_Dat","substr($1,0,8),$33"\n" \ Ser_Dat","substr($1,0,8),$34"\n" \ Ser_Dat","substr($1,0,8),$35"\n" \ Ser_Dat","substr($1,0,8),$36"\n" \ Ser_Dat","substr($1,0,8),$37"\n" \ Ser_Dat","substr($1,0,8),$38"\n" \ Ser_Dat","substr($1,0,8),$39"\n" \ Ser_Dat","substr($1,0,8),$40"\n" \ Ser_Dat","substr($1,0,8),$41"\n" \
+Ser_Dat","substr($1,0,8),$42 \
+}' $File  >> $DEV_file
+
+
+#### QUEUEUE Information ####
+awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $3}' $File | awk '{print "Server,Date,Time,"$0}' > $QUEUE_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$43}' $File  >> $QUEUE_file
+
+
+#### BUFFER Information ####
+awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $4}' $File | awk '{print "Server,Date,Time,"$0}' > $BUFFER_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$44}' $File  >> $BUFFER_file
+
+
+#### SWAP Information ####
+awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $5}' $File | awk '{print "Server,Date,Time,"$0}' > $SWAP_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$45}' $File  >> $SWAP_file
+
+#### SYSTEM CALLS Information ####
+awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $6}' $File | awk '{print "Server,Date,Time,"$0}' > $CALLS_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$46}' $File  >> $CALLS_file
+
+
+#### FILE ACCESS Information ####
+awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $7}' $File | awk '{print "Server,Date,Time,"$0}' > $FLACC_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$47}' $File  >> $FLACC_file
+
+#### TERMINAL ACTIVITY Information ####
+awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $8}' $File | awk '{print "Server,Date,Time,"$0}' > $TERMAC_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$48}' $File  >> $TERMAC_file
+
+
+#### SYSTEM TABLE Information ####
+awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $9}' $File | awk '{print "Server,Date,Time,"$0}' > $SYTABLE_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$49}' $File  >> $SYTABLE_file
+
+#### INTERPROCESS COMMUNICATION Information #### awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $10}' $File | awk '{print "Server,Date,Time,"$0}' > $INTCOMM_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$50}' $File  >> $INTCOMM_file
+
+#### PAGE-IN ACTIVITY Information ####
+awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $11}' $File | awk '{print "Server,Date,Time,"$0}' > $PAGEIN_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$51}' $File  >> $PAGEIN_file
+
+#### PAGE-OUT ACTIVITY Information ####
+awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $12}' $File | awk '{print "Server,Date,Time,"$0}' > $PAGEOUT_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$52}' $File  >> $PAGEOUT_file
+
+#### UNUSED MEMORY ACTIVITY Information #### awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $13}' $File | awk '{print "Server,Date,Time,"$0}' > $UMEM_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$53}' $File  >> $UMEM_file
+
+#### KERNEL MEMORY ACTIVITY Information #### awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $14}' $File | awk '{print "Server,Date,Time,"$0}' > $KMEM_file awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","substr($1,0,8),$54}' $File  >> $KMEM_file
+
+paste timetable.txt $CPU_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $CPU_file
+#sed -e 's/\ \ */,/g' $CPU_file > temp; mv temp $CPU_file
+
+paste Devtimetable.txt $DEV_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $DEV_file
+#sed -e 's/\ \ */,/g' $DEV_file > temp; mv temp $DEV_file
+
+paste timetable.txt $QUEUE_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $QUEUE_file
+#sed -e 's/\ \ */,/g' $QUEUE_file > temp; mv temp $QUEUE_file
+
+paste timetable.txt $BUFFER_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $BUFFER_file
+#sed -e 's/\ \ */,/g' $BUFFER_file > temp; mv temp $BUFFER_file
+
+paste timetable.txt $SWAP_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $SWAP_file
+#sed -e 's/\ \ */,/g' $SWAP_file > temp; mv temp $SWAP_file
+
+paste timetable.txt $CALLS_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $CALLS_file
+#sed -e 's/\ \ */,/g' $CALLS_file > temp; mv temp $CALLS_file
+
+paste timetable.txt $FLACC_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $FLACC_file
+#sed -e 's/\ \ */,/g' $FLACC_file > temp; mv temp $FLACC_file
+
+paste timetable.txt $TERMAC_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $TERMAC_file
+#sed -e 's/\ \ */,/g' $TERMAC_file > temp; mv temp $TERMAC_file
+
+paste timetable.txt $SYTABLE_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $SYTABLE_file
+#sed -e 's/\ \ */,/g' $SYTABLE_file > temp; mv temp $SYTABLE_file
+
+paste timetable.txt $INTCOMM_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $INTCOMM_file
+#sed -e 's/\ \ */,/g' $INTCOMM_file > temp; mv temp $INTCOMM_file
+
+paste timetable.txt $PAGEIN_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $PAGEIN_file
+#sed -e 's/\ \ */,/g' $PAGEIN_file > temp; mv temp $PAGEIN_file
+
+paste timetable.txt $PAGEOUT_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $PAGEOUT_file
+#sed -e 's/\ \ */,/g' $PAGEOUT_file > temp; mv temp $PAGEOUT_file
+
+paste timetable.txt $UMEM_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $UMEM_file
+#sed -e 's/\ \ */,/g' $UMEM_file > temp; mv temp $UMEM_file
+
+paste timetable.txt $KMEM_file > temp
+sed -e 's/	//g;s/\ \ */,/g' temp > $KMEM_file
+#sed -e 's/\ \ */,/g' $KMEM_file > temp; mv temp $KMEM_file rm temp
+
+
+###awk -v Ser_Dat=$Server_Date ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print Ser_Dat","$1}' $File  >> $CPU_file ###sed -e 's/\ \ */,/g' $CPU_file > temp; mv temp $CPU_file
+
+#Time=$(awk ' BEGIN {RS = ""} {FS ="\n"} (NF==54) {print $1}' $File \n"}') #awk ' BEGIN {RS = ""} {FS ="\n"} (NF==14) {print $0}' $File > headers.txt
